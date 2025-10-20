@@ -153,3 +153,8 @@ coverage/
 dados_sppo.json
 *.pid
 *.log
+
+# Arquivos de dados grandes
+*.json
+!package.json
+!package-lock.json
