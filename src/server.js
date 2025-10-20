@@ -88,8 +88,8 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com"],
-      imgSrc: ["'self'", "data:", "https://*.tile.openstreetmap.org"],
-      connectSrc: ["'self'", "https://dados.mobilidade.rio", "https://unpkg.com"]
+      imgSrc: ["'self'", "data:", "https://*.tile.openstreetmap.org", "https://a.tile.openstreetmap.org", "https://b.tile.openstreetmap.org", "https://c.tile.openstreetmap.org"],
+      connectSrc: ["'self'", "https://dados.mobilidade.rio", "https://unpkg.com", "https://*.tile.openstreetmap.org", "https://a.tile.openstreetmap.org", "https://b.tile.openstreetmap.org", "https://c.tile.openstreetmap.org"]
     }
   }
 }));
