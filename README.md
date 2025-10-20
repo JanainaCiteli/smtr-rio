@@ -286,14 +286,14 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICE
 
 ## 🔄 Changelog
 
-### v2.0.0 (2024-01-01)
+### v2.0.0 (2025-10-19)
 - ✨ Interface completamente redesenhada
 - 🚀 Performance otimizada com cache inteligente
 - 🛡️ Segurança aprimorada
 - 📱 Design responsivo
 - 🔧 Tecnologias modernas (ES6+, Node.js 18+)
 
-### v1.0.0 (2023-01-01)
+### v1.0.0 (2023-10-18)
 - 🎉 Lançamento inicial
 - 🗺️ Mapa básico com Leaflet
 - 📊 Tabela de dados
@@ -301,4 +301,4 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICE
 
 ---
 
-**Desenvolvido com ❤️ pela equipe SMTR Rio**
+**Desenvolvido com ❤️ por Janaina Citeli**
