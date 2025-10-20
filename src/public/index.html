@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Monitoramento em tempo real dos ônibus do SPPO do Rio de Janeiro">
+    <meta name="keywords" content="SPPO, Rio de Janeiro, ônibus, GPS, transporte público">
+    <meta name="author" content="SMTR Rio">
+    
+    <title>Monitoramento SPPO Rio - Tempo Real</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚌</text></svg>">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="/css/style.css">
+    
+    <!-- Preload critical resources - CORRIGIDO -->
+    <link rel="preload" href="/js/app.js" as="script">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>🚌 Monitoramento SPPO Rio</h1>
+                    <p>Dados em tempo real dos ônibus do Rio de Janeiro</p>
+                </div>
+                <div class="header-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Total de Ônibus:</span>
+                        <span class="stat-value" id="totalBuses">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Velocidade Média:</span>
+                        <span class="stat-value" id="avgSpeed">-</span>
+                        <span class="stat-unit">km/h</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Última Atualização:</span>
+                        <span class="stat-value" id="lastUpdate">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Controls -->
+            <section class="controls">
+                <div class="control-group">
+                    <h2>🔍 Filtros de Busca</h2>
+                    
+                    <!-- Busca por Linha -->
+                    <div class="filter-section">
+                        <h3>Buscar por Linha</h3>
+                        <div class="input-group">
+                            <input type="text" id="lineInput" placeholder="Digite o número da linha (ex: 415)" 
+                                   maxlength="20" autocomplete="off">
+                            <button id="searchByLine" class="btn btn-primary">
+                                <span class="btn-icon">🔍</span>
+                                Buscar Linha
+                            </button>
+                        </div>
+                        <div class="help-text">Exemplo: 415, 415A, SN415</div>
+                    </div>
+                    
+                    <!-- Busca por Posição -->
+                    <div class="filter-section">
+                        <h3>Buscar por Posição</h3>
+                        <div class="input-group">
+                            <input type="number" id="latInput" placeholder="Latitude" step="0.000001" 
+                                   min="-90" max="90" autocomplete="off">
+                            <input type="number" id="lonInput" placeholder="Longitude" step="0.000001" 
+                                   min="-180" max="180" autocomplete="off">
+                            <input type="number" id="radiusInput" placeholder="Raio (km)" step="0.1" 
+                                   min="0.1" max="50" value="1" autocomplete="off">
+                            <button id="searchByPosition" class="btn btn-secondary">
+                                <span class="btn-icon">📍</span>
+                                Buscar Posição
+                            </button>
+                        </div>
+                        <div class="help-text">
+                            Exemplo: Lat: -22.9068, Lon: -43.1729, Raio: 1km
+                        </div>
+                    </div>
+                    
+                    <!-- Botões de Ação -->
+                    <div class="action-buttons">
+                        <button id="showAll" class="btn btn-success">
+                            <span class="btn-icon">🌐</span>
+                            Mostrar Todos
+                        </button>
+                        <button id="clearFilters" class="btn btn-warning">
+                            <span class="btn-icon">🔄</span>
+                            Limpar Filtros
+                        </button>
+                        <button id="refreshData" class="btn btn-info">
+                            <span class="btn-icon">🔄</span>
+                            Atualizar Dados
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loading Indicator - CORRIGIDO -->
+            <div id="loadingIndicator" class="loading-indicator hidden">
+                <div class="spinner"></div>
+                <p>Carregando dados...</p>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="error-message hidden">
+                <div class="error-content">
+                    <span class="error-icon">⚠️</span>
+                    <span class="error-text"></span>
+                    <button id="dismissError" class="btn btn-small">✕</button>
+                </div>
+            </div>
+
+            <!-- Map and Table Container -->
+            <div class="content-grid">
+                <!-- Map Section -->
+                <section class="map-section">
+                    <div class="section-header">
+                        <h2>🗺️ Mapa em Tempo Real</h2>
+                        <div class="map-controls">
+                            <button id="centerMap" class="btn btn-small">
+                                <span class="btn-icon">🎯</span>
+                                Centralizar
+                            </button>
+                            <button id="toggleMap" class="btn btn-small">
+                                <span class="btn-icon">👁️</span>
+                                Ocultar
+                            </button>
+                        </div>
+                    </div>
+                    <div id="map" class="map-container"></div>
+                </section>
+
+                <!-- Table Section -->
+                <section class="table-section">
+                    <div class="section-header">
+                        <h2>📊 Lista de Ônibus</h2>
+                        <div class="table-controls">
+                            <div class="search-box">
+                                <input type="text" id="tableSearch" placeholder="Buscar na tabela..." 
+                                       autocomplete="off">
+                                <span class="search-icon">🔍</span>
+                            </div>
+                            <button id="exportData" class="btn btn-small">
+                                <span class="btn-icon">📥</span>
+                                Exportar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="busTable" class="bus-table">
+                            <thead>
+                                <tr>
+                                    <th>Linha</th>
+                                    <th>Ordem</th>
+                                    <th>Velocidade</th>
+                                    <th>Latitude</th>
+                                    <th>Longitude</th>
+                                    <th>Última Atualização</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Dados serão inseridos dinamicamente -->
+                            </tbody>
+                        </table>
+                        <div id="noDataMessage" class="no-data hidden">
+                            <div class="no-data-content">
+                                <span class="no-data-icon">🚌</span>
+                                <h3>Nenhum ônibus encontrado</h3>
+                                <p>Tente ajustar os filtros de busca ou aguarde a próxima atualização.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <p>&copy; 2024 SMTR Rio - Sistema de Monitoramento de Transporte Público</p>
+                    <p>Dados fornecidos pela Prefeitura do Rio de Janeiro</p>
+                </div>
+                <div class="footer-links">
+                    <a href="/api-docs" target="_blank" class="footer-link">📖 Documentação da API</a>
+                    <a href="https://dados.mobilidade.rio" target="_blank" class="footer-link">🌐 Portal de Dados</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts - CORRIGIDO integrity mismatch -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            crossorigin=""
+            defer></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" defer></script>
+    <script src="/js/app.js" defer></script>
+    
+    <!-- Service Worker para cache offline -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => console.log('SW registrado:', registration))
+                .catch(error => console.log('Erro ao registrar SW:', error));
+        }
+    </script>
+</body>
+</html>
